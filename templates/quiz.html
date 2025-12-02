@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MCQ Quiz</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px 24px 24px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid #1f2937;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    .badge {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #111827;
+      border: 1px solid #4b5563;
+    }
+    .progress-wrapper {
+      margin: 10px 0 16px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #111827;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      transition: width 0.25s ease-out;
+    }
+    .progress-text {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .question-text {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 14px;
+    }
+    .options {
+      margin-bottom: 12px;
+    }
+    .option {
+      margin: 5px 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .option input {
+      margin: 0;
+    }
+    .option span {
+      font-size: 0.95rem;
+    }
+    .option.selected {
+      background: #111827;
+      border-color: #4f46e5;
+    }
+    .feedback {
+      margin-top: 8px;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .feedback.correct {
+      color: #4ade80;
+    }
+    .feedback.wrong {
+      color: #f97373;
+    }
+    .buttons-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: white;
+    }
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+    .btn-muted {
+      background: #030712;
+      color: #9ca3af;
+      border: 1px solid #1f2937;
+    }
+    .result {
+      margin-top: 10px;
+    }
+    .result h2 {
+      margin: 0 0 6px;
+      font-size: 1.1rem;
+    }
+    .result p {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #d1d5db;
+    }
+    .summary {
+      margin-top: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+    .summary-item {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #111827;
+    }
+    .summary-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      margin-right: 6px;
+    }
+    .chip.correct {
+      background: #022c22;
+      color: #6ee7b7;
+    }
+    .chip.wrong {
+      background: #3f1d1d;
+      color: #fecaca;
+    }
+    @media (max-width: 640px) {
+      .card {
+        border-radius: 0;
+        height: 100vh;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="title">MCQ Quiz</div>
+      <div class="badge" id="score-badge">Score: 0</div>
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div class="progress-text" id="progress-text"></div>
+    </div>
+
+    <div id="quiz-container">
+      <p id="question" class="question-text"></p>
+      <div id="options" class="options"></div>
+      <p id="feedback" class="feedback"></p>
+
+      <div class="buttons-row">
+        <button id="prev-btn" class="btn-muted" disabled>⬅ Previous</button>
+        <button id="submit-btn" class="btn-primary">Submit</button>
+        <button id="next-btn" class="btn-secondary" style="display:none;">Next ➡</button>
+      </div>
+    </div>
+
+    <div id="result" class="result" style="display:none;">
+      <h2>Quiz Finished 🎉</h2>
+      <p id="score-text"></p>
+      <div class="buttons-row">
+        <button id="retry-wrong-btn" class="btn-secondary">Retry wrong questions</button>
+        <button id="restart-btn" class="btn-muted">Restart full quiz</button>
+      </div>
+      <div class="summary" id="summary"></div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = {{ questions_json|safe }};
+
+    let currentIndex = 0;
+    let score = 0;
+    let selected = null;
+    let answers = []; // {index, your, correct, isCorrect}
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const progressEl = document.getElementById("progress-text");
+    const progressBarEl = document.getElementById("progress-bar");
+    const feedbackEl = document.getElementById("feedback");
+    const submitBtn = document.getElementById("submit-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const prevBtn = document.getElementById("prev-btn");
+    const quizDiv = document.getElementById("quiz-container");
+    const resultDiv = document.getElementById("result");
+    const scoreText = document.getElementById("score-text");
+    const scoreBadge = document.getElementById("score-badge");
+    const summaryEl = document.getElementById("summary");
+    const retryWrongBtn = document.getElementById("retry-wrong-btn");
+    const restartBtn = document.getElementById("restart-btn");
+
+    function updateProgress() {
+      const total = QUESTIONS.length;
+      const current = currentIndex + 1;
+      progressEl.textContent = "Question " + current + " of " + total;
+      const percent = (current / total) * 100;
+      progressBarEl.style.width = percent + "%";
+      scoreBadge.textContent = "Score: " + score;
+    }
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIndex];
+      updateProgress();
+
+      questionEl.textContent = "Q" + q.number + ". " + q.question;
+      optionsEl.innerHTML = "";
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      selected = null;
+
+      const labels = ["A", "B", "C", "D"];
+
+      q.options.forEach((opt, i) => {
+        const label = labels[i];
+        const div = document.createElement("label");
+        div.className = "option";
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "option";
+        input.value = label;
+
+        const span = document.createElement("span");
+        span.textContent = label + ") " + opt;
+
+        input.addEventListener("change", () => {
+          selected = input.value;
+          document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+          div.classList.add("selected");
+        });
+
+        div.appendChild(input);
+        div.appendChild(span);
+        optionsEl.appendChild(div);
+      });
+
+      // buttons state
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.style.display = "none";
+      submitBtn.style.display = "inline-block";
+    }
+
+    function showSummary() {
+      summaryEl.innerHTML = "";
+      answers.forEach((ans, i) => {
+        const q = QUESTIONS[ans.index];
+        const div = document.createElement("div");
+        div.className = "summary-item";
+
+        const chip = document.createElement("span");
+        chip.className = "chip " + (ans.isCorrect ? "correct" : "wrong");
+        chip.textContent = ans.isCorrect ? "Correct" : "Wrong";
+
+        const qtext = document.createElement("div");
+        qtext.textContent = "Q" + q.number + ". " + q.question;
+
+        const detail = document.createElement("div");
+        detail.textContent = "Your answer: " + (ans.your || "—") + " | Correct: " + ans.correct;
+
+        div.appendChild(chip);
+        div.appendChild(qtext);
+        div.appendChild(detail);
+
+        summaryEl.appendChild(div);
+      });
+    }
+
+    submitBtn.addEventListener("click", function () {
+      if (!selected) {
+        alert("Please select an option.");
+        return;
+      }
+      const q = QUESTIONS[currentIndex];
+      const correct = q.answer;
+      let existing = answers.find(a => a.index === currentIndex);
+      const isCorrect = selected === correct;
+
+      if (!existing) {
+        answers.push({
+          index: currentIndex,
+          your: selected,
+          correct: correct,
+          isCorrect: isCorrect
+        });
+      } else {
+        existing.your = selected;
+        existing.isCorrect = isCorrect;
+      }
+
+      // recompute score
+      score = answers.filter(a => a.isCorrect).length;
+      scoreBadge.textContent = "Score: " + score;
+
+      if (isCorrect) {
+        feedbackEl.textContent = "✅ Correct! Answer: " + correct;
+        feedbackEl.className = "feedback correct";
+      } else {
+        feedbackEl.textContent = "❌ Wrong. Correct answer: " + correct;
+        feedbackEl.className = "feedback wrong";
+      }
+
+      submitBtn.style.display = "none";
+      nextBtn.style.display = "inline-block";
+      nextBtn.textContent = (currentIndex === QUESTIONS.length - 1) ? "Finish 🎯" : "Next ➡";
+    });
+
+    nextBtn.addEventListener("click", function () {
+      if (currentIndex >= QUESTIONS.length - 1) {
+        // show result
+        quizDiv.style.display = "none";
+        resultDiv.style.display = "block";
+        const total = QUESTIONS.length;
+        const percent = (score * 100 / total).toFixed(2);
+        scoreText.textContent = "Your score: " + score + " / " + total + " (" + percent + "%)";
+        showSummary();
+      } else {
+        currentIndex += 1;
+        renderQuestion();
+      }
+    });
+
+    prevBtn.addEventListener("click", function () {
+      if (currentIndex > 0) {
+        currentIndex -= 1;
+        renderQuestion();
+      }
+    });
+
+    retryWrongBtn.addEventListener("click", function () {
+      const wrong = answers.filter(a => !a.isCorrect);
+      if (wrong.length === 0) {
+        alert("No wrong questions to retry 🎉");
+        return;
+      }
+      // rebuild QUESTIONS list only with wrong ones
+      const newQuestions = wrong.map(a => QUESTIONS[a.index]);
+      // reset state
+      while (QUESTIONS.length) { QUESTIONS.pop(); }
+      newQuestions.forEach(q => QUESTIONS.push(q));
+      currentIndex = 0;
+      score = 0;
+      answers = [];
+      quizDiv.style.display = "block";
+      resultDiv.style.display = "none";
+      renderQuestion();
+    });
+
+    restartBtn.addEventListener("click", function () {
+      // simple full reload to restart
+      window.location.href = "/";
+    });
+
+    // initial render
+    renderQuestion();
+  </script>
+</body>
+</html>
